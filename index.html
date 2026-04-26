@@ -271,6 +271,17 @@
             top: 0; left: 0;
             z-index: 1;
             opacity: 0.85;
+            /* Filter removed from here so it doesn't apply to all images */
+        }
+
+        /* NEW CLASS: Pushes the image text to the bottom */
+        .image-label {
+            position: absolute;
+            bottom: 25px; /* Sits right above the navigation dots */
+            z-index: 2;
+            font-size: 1rem;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Ensures it's readable */
         }
 
         .gallery-container::after {
@@ -322,7 +333,6 @@
             50% { opacity: 1; }
         }
 
-        /* --- THE FIX: Removed !important so JS can overwrite it --- */
         .hidden-control { display: none; }
 
         /* Typewriter Cursor */
@@ -360,7 +370,7 @@
             <div class="emoji-large">👸</div>
             <h1>SYSTEM ALERT: MADAM-JI DETECTED</h1>
             <p>Initializing birthday sequence 21.0...</p>
-            <button onclick="nextScreen(1, 2)">ACCESS SURPRISE</button>
+            <button onclick="startSequence()">ACCESS SURPRISE</button>
         </div>
     </div>
 
@@ -408,22 +418,18 @@
             <div class="gallery-container" id="gallery">
                 <div class="gallery-track" id="gallery-track">
                     
-                    <div class="gallery-track" id="gallery-track">
+                    <div class="gallery-slide">
+                        <img src="0d7db546da582196dd86c13745b9f3b0.jpg.jpeg" alt="Memory 1" style="filter: brightness(1.3);">
+                        <span class="image-label">⮞</span>
+                    </div>
+                    <div class="gallery-slide">
+                        <img src="IMG20251223195255.jpg.jpeg" alt="Memory 2">
+                        <span class="image-label">⮜ ⮞</span>
+                    </div>
 
-                        <div class="gallery-slide">
-                            <img src="0d7db546da582196dd86c13745b9f3b0.jpg.jpeg" alt="Memory 1">
-                            <span style="z-index:2;">📸 1</span>
-                        </div>
-                        <div class="gallery-slide">
-                            <img src="IMG20251223195255.jpg.jpeg" alt="Memory 2">
-                            <span style="z-index:2;">📸 2</span>
-                        </div>
-
-                        <div class="gallery-slide">
-                            <img src="9861b06c430bbe9b7a56550760640930.jpg.jpeg" alt="Memory 3">
-                            <span style="z-index:2;">📸 3</span>
-                        </div>
-
+                    <div class="gallery-slide">
+                        <img src="9861b06c430bbe9b7a56550760640930.jpg.jpeg" alt="Memory 3">
+                        <span class="image-label">⮜</span>
                     </div>
 
                 </div>
@@ -461,8 +467,27 @@
 
 </div>
 
+<audio id="birthday_audio" src="flute_melody.mp3" preload="auto" loop></audio>
+
 <script>
     const cyberColors = ['#00f3ff', '#ff7eb3', '#bf00ff', '#ffffff'];
+
+    // --- NEW FUNCTION: Starts the sequence and plays audio ---
+    function startSequence() {
+        const audio = document.getElementById('birthday_audio');
+        audio.volume = 0.1; // Keeps the volume low and soft
+        
+        // Play the audio. Because this is triggered by a click, the browser will allow it.
+        let playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Audio play failed:", error);
+            });
+        }
+        
+        // Move to the next screen
+        nextScreen(1, 2);
+    }
 
     function nextScreen(currentId, nextId) {
         document.getElementById(`screen-${currentId}`).classList.remove('active');
@@ -676,6 +701,7 @@
             }));
         }, 250);
     }
+
 </script>
 
 </body>
