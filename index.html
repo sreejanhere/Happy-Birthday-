@@ -196,15 +196,72 @@
         }
 
         .balloon {
-            font-size: 3rem;
             cursor: pointer;
             position: absolute;
             z-index: 2;
-            filter: drop-shadow(0 0 10px rgba(255, 126, 179, 0.6));
         }
 
-        .balloon-container:nth-child(even) .balloon { animation: floatHolo 3s infinite reverse; }
-        .balloon-container:nth-child(odd) .balloon { animation: floatHolo 3.5s infinite; }
+        /* --- 3D CSS BALLOONS --- */
+        .balloon-gfx {
+            width: 45px;
+            height: 60px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(255,255,255,0.6);
+        }
+
+        .balloon-gfx::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 8px;
+            background: inherit;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        .balloon-gfx::before {
+            content: '';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1.5px;
+            height: 30px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), transparent);
+        }
+
+        .b-cyan { background: radial-gradient(circle at 30% 30%, #e0ffff, #00f3ff); }
+        .b-pink { background: radial-gradient(circle at 30% 30%, #ffe6f0, #ff7eb3); }
+        .b-purple { background: radial-gradient(circle at 30% 30%, #f2d9ff, #bf00ff); }
+        .b-gold { background: radial-gradient(circle at 30% 30%, #fff4cc, #ffb300); }
+
+        /* Sequential Balloon States */
+        .balloon.waiting-to-pop {
+            transform: scale(1.4);
+            animation: pulseAttention 1s infinite alternate;
+            z-index: 10;
+            pointer-events: auto;
+            filter: drop-shadow(0 0 15px var(--neon-cyan));
+        }
+
+        .balloon.locked {
+            pointer-events: none;
+            opacity: 0.4;
+            transform: scale(0.9);
+            filter: grayscale(0.5);
+            transition: all 0.4s ease;
+        }
+
+        @keyframes pulseAttention {
+            0% { transform: scale(1.3); }
+            100% { transform: scale(1.5); }
+        }
+
+        .balloon-container:nth-child(even) .balloon:not(.waiting-to-pop) { animation: floatHolo 3s infinite reverse; }
+        .balloon-container:nth-child(odd) .balloon:not(.waiting-to-pop) { animation: floatHolo 3.5s infinite; }
 
         .balloon.popped {
             transform: scale(1.5);
@@ -212,6 +269,7 @@
             filter: blur(10px) brightness(2);
             transition: all 0.2s ease-out;
             pointer-events: none;
+            animation: none;
         }
 
         .hidden-word {
@@ -233,7 +291,7 @@
         /* Swipeable Image Gallery */
         .gallery-container {
             width: 100%;
-            height: 35vh;   /* scales with screen */
+            height: 35vh; 
             max-height: 350px;
             position: relative;
             overflow: hidden;
@@ -271,17 +329,15 @@
             top: 0; left: 0;
             z-index: 1;
             opacity: 0.85;
-            /* Filter removed from here so it doesn't apply to all images */
         }
 
-        /* NEW CLASS: Pushes the image text to the bottom */
         .image-label {
             position: absolute;
-            bottom: 25px; /* Sits right above the navigation dots */
+            bottom: 25px;
             z-index: 2;
             font-size: 1rem;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Ensures it's readable */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .gallery-container::after {
@@ -294,6 +350,33 @@
             z-index: 10;
         }
 
+        /* Nav Arrows Styling */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+
+        .nav-arrow.left { left: 5px; }
+        .nav-arrow.right { right: 5px; }
+
+        .arrow-glow {
+            animation: arrowPulse 1.5s infinite;
+            color: #fff;
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { filter: drop-shadow(0 0 5px var(--neon-cyan)); text-shadow: 0 0 10px var(--neon-cyan); }
+            50% { filter: drop-shadow(0 0 15px var(--neon-cyan)); text-shadow: 0 0 20px var(--neon-cyan); }
+        }
+
+        /* Nav Dots */
         .gallery-nav {
             position: absolute;
             bottom: 12px;
@@ -385,24 +468,32 @@
     <div id="screen-3" class="screen">
         <div class="glass-card">
             <h1>TARGET BALLOONS</h1>
-            <p style="font-size: 0.8rem; color: var(--neon-cyan);">[Tap to detonate]</p>
+            <p style="font-size: 0.8rem; color: var(--neon-cyan);">[Tap to detonate in sequence]</p>
             
             <div class="balloon-grid">
                 <div class="balloon-container">
                     <span class="hidden-word">HELLO</span>
-                    <div class="balloon" onclick="popBalloon(this)">🎈</div>
+                    <div class="balloon waiting-to-pop" onclick="popSequentialBalloon(0, this)">
+                        <div class="balloon-gfx b-cyan"></div>
+                    </div>
                 </div>
                 <div class="balloon-container">
                     <span class="hidden-word">MALKIN</span>
-                    <div class="balloon" onclick="popBalloon(this)">🎈</div>
+                    <div class="balloon locked" onclick="popSequentialBalloon(1, this)">
+                        <div class="balloon-gfx b-pink"></div>
+                    </div>
                 </div>
                 <div class="balloon-container">
                     <span class="hidden-word">SOMETHING'S</span>
-                    <div class="balloon" onclick="popBalloon(this)">🎈</div>
+                    <div class="balloon locked" onclick="popSequentialBalloon(2, this)">
+                        <div class="balloon-gfx b-purple"></div>
+                    </div>
                 </div>
                 <div class="balloon-container">
                     <span class="hidden-word">WAITING</span>
-                    <div class="balloon" onclick="popBalloon(this)">🎈</div>
+                    <div class="balloon locked" onclick="popSequentialBalloon(3, this)">
+                        <div class="balloon-gfx b-gold"></div>
+                    </div>
                 </div>
             </div>
 
@@ -416,28 +507,28 @@
             <p class="swipe-hint">« SWIPE TO BROWSE »</p>
             
             <div class="gallery-container" id="gallery">
+                <div class="nav-arrow left" id="arrow-left" onclick="changeSlide(-1)">&#10094;</div>
+                <div class="nav-arrow right" id="arrow-right" onclick="changeSlide(1)">&#10095;</div>
+
                 <div class="gallery-track" id="gallery-track">
-                    
                     <div class="gallery-slide">
                         <img src="0d7db546da582196dd86c13745b9f3b0.jpg.jpeg" alt="Memory 1" style="filter: brightness(1.3);">
-                        <span class="image-label">⮞</span>
+                        <span class="image-label"></span>
                     </div>
                     <div class="gallery-slide">
                         <img src="IMG20251223195255.jpg.jpeg" alt="Memory 2">
-                        <span class="image-label">⮜ ⮞</span>
+                        <span class="image-label"></span>
                     </div>
-
                     <div class="gallery-slide">
-                        <img src="9861b06c430bbe9b7a56550760640930.jpg.jpeg" alt="Memory 3">
-                        <span class="image-label">⮜</span>
+                        <img src="WhatsApp Image 2026-04-28 at 11.43.31.jpeg" alt="Memory 3">
+                        <span class="image-label"></span>
                     </div>
-
+                    <div class="gallery-slide">
+                        <img src="9861b06c430bbe9b7a56550760640930.jpg.jpeg" alt="Memory 4">
+                        <span class="image-label"></span>
+                    </div>
                 </div>
-                <div class="gallery-nav" id="gallery-dots">
-                    <span class="nav-dot active"></span>
-                    <span class="nav-dot"></span>
-                    <span class="nav-dot"></span>
-                </div>
+                <div class="gallery-nav" id="gallery-dots"></div>
             </div>
 
             <button onclick="startTypewriterAndNext()">DECRYPT MESSAGE</button>
@@ -472,12 +563,10 @@
 <script>
     const cyberColors = ['#00f3ff', '#ff7eb3', '#bf00ff', '#ffffff'];
 
-    // --- NEW FUNCTION: Starts the sequence and plays audio ---
     function startSequence() {
         const audio = document.getElementById('birthday_audio');
-        audio.volume = 0.1; // Keeps the volume low and soft
+        audio.volume = 0.1; 
         
-        // Play the audio. Because this is triggered by a click, the browser will allow it.
         let playPromise = audio.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
@@ -485,13 +574,17 @@
             });
         }
         
-        // Move to the next screen
         nextScreen(1, 2);
     }
 
     function nextScreen(currentId, nextId) {
         document.getElementById(`screen-${currentId}`).classList.remove('active');
         document.getElementById(`screen-${nextId}`).classList.add('active');
+        
+        // Initialize gallery dots when screen 4 opens
+        if(nextId === 4) {
+            initGallery();
+        }
     }
 
     let cakeStage = 0;
@@ -521,13 +614,16 @@
         }
     }
 
-    let poppedCount = 0;
-    function popBalloon(element) {
-        if (element.classList.contains('popped')) return;
-        
+    // Sequential Balloon Logic
+    let currentBalloonIndex = 0;
+    const balloons = document.querySelectorAll('.balloon-grid .balloon');
+
+    function popSequentialBalloon(index, element) {
+        if (index !== currentBalloonIndex) return;
+
+        element.classList.remove('waiting-to-pop');
         element.classList.add('popped');
-        element.previousElementSibling.classList.add('visible');
-        poppedCount++;
+        element.previousElementSibling.classList.add('visible'); 
 
         confetti({
             particleCount: 25,
@@ -541,28 +637,69 @@
             gravity: 1.5
         });
 
-        if (poppedCount === 4) {
+        currentBalloonIndex++;
+
+        if (currentBalloonIndex < balloons.length) {
+            setTimeout(() => {
+                balloons[currentBalloonIndex].classList.remove('locked');
+                balloons[currentBalloonIndex].classList.add('waiting-to-pop');
+            }, 400); 
+        } else {
             setTimeout(() => {
                 document.getElementById('balloon-next').style.display = 'flex';
-            }, 600);
+            }, 800);
         }
     }
 
+    // Gallery Logic
     const gallery = document.getElementById('gallery');
     const track = document.getElementById('gallery-track');
-    const dots = document.querySelectorAll('.nav-dot');
     const totalSlides = document.querySelectorAll('.gallery-slide').length;
     let currentSlide = 0;
     let startX = 0;
     let isDragging = false;
 
-    function updateGallery() {
-        track.style.transform = `translateX(-${currentSlide * 100}%)`;
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === currentSlide);
-        });
+    // Build dots dynamically based on number of images
+    function initGallery() {
+        const dotsContainer = document.getElementById('gallery-dots');
+        dotsContainer.innerHTML = ''; 
+        for(let j = 0; j < totalSlides; j++) {
+            let dot = document.createElement('span');
+            dot.className = 'nav-dot';
+            if(j === 0) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+        }
+        updateGallery();
     }
 
+    // Handle Arrow clicks
+    function changeSlide(direction) {
+        currentSlide += direction;
+        if (currentSlide < 0) currentSlide = 0;
+        if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+        updateGallery();
+    }
+
+    function updateGallery() {
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        
+        // Update dots
+        document.querySelectorAll('.nav-dot').forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+
+        // Update Glowing Arrows
+        const leftArrow = document.getElementById('arrow-left');
+        const rightArrow = document.getElementById('arrow-right');
+
+        if (currentSlide > 0) leftArrow.classList.add('arrow-glow');
+        else leftArrow.classList.remove('arrow-glow');
+
+        if (currentSlide < totalSlides - 1) rightArrow.classList.add('arrow-glow');
+        else rightArrow.classList.remove('arrow-glow');
+    }
+
+    // Swipe Event Listeners
     gallery.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         isDragging = true;
@@ -620,6 +757,7 @@
         }
     });
 
+    // Typewriter Logic
     const message = "Happy Birthday, Madam! You deserve all the happiness, love, and smiles in the world today and always. \n\nYou have this special way of making everything around you brighter. Let this day be brighter and happier and God bless you always!! \n\nHappy Birthday Love❤️";
     let i = 0;
     
@@ -647,21 +785,20 @@
         }
     }
 
+    // Final Surprise Logic
     function openGift() {
         const gift = document.getElementById('gift-box');
         const reel = document.getElementById('surprise-reel');
 
         gift.style.animation = 'none';
         gift.style.transform = 'scale(0.5)';
-        gift.onclick = null; // Prevent double-clicking
+        gift.onclick = null; 
 
-        // Fade to the video reel
         setTimeout(() => {
             reel.style.display = 'block';
             reel.play().catch(e => console.error("Autoplay prevented. User interaction required.", e));
         }, 300);
 
-        // When the reel finishes playing, close it and trigger the final surprise
         reel.onended = () => {
             reel.style.display = 'none';
             triggerFinalSurprise();
